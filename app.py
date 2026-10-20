@@ -103,15 +103,16 @@ if df is None:
 st.sidebar.header("Filtros")
 
 anios_disponibles = sorted(df["Año"].unique().tolist())
-anios = st.sidebar.multiselect(
-    "Año(s)", anios_disponibles, default=anios_disponibles, placeholder="Elige uno o más años"
-)
+with st.sidebar.expander("Año(s)"):
+    anios = st.multiselect(
+        "Año(s)", anios_disponibles, default=[], placeholder="Todos"
+    )
 
 tipos_presentes = [t for t in ORDEN_TIPOS if t in set(df["Tipo de Proyecto"].dropna())]
-tipos = st.sidebar.multiselect(
-    "Tipo de proyecto", tipos_presentes, default=tipos_presentes,
-    placeholder="Elige uno o más tipos",
-)
+with st.sidebar.expander("Tipo de proyecto"):
+    tipos = st.multiselect(
+        "Tipo de proyecto", tipos_presentes, default=[], placeholder="Todos",
+    )
 
 with st.sidebar.expander("Más filtros"):
     estados_presentes = sorted(df["Estado Actual"].dropna().unique().tolist())
@@ -125,7 +126,15 @@ if st.sidebar.button("Cerrar sesión"):
     st.session_state.clear()
     st.rerun()
 
-filtro = df["Año"].isin(anios) & df["Tipo de Proyecto"].isin(tipos)
+# Sin selección en un filtro = sin restricción (se consideran todos sus valores).
+anios_efectivos = anios if anios else anios_disponibles
+tipos_efectivos = tipos if tipos else tipos_presentes
+
+filtro = pd.Series(True, index=df.index)
+if anios:
+    filtro &= df["Año"].isin(anios)
+if tipos:
+    filtro &= df["Tipo de Proyecto"].isin(tipos)
 if estados:
     filtro &= df["Estado Actual"].isin(estados)
 if busqueda:
@@ -146,7 +155,7 @@ if filtrado.empty:
 # ---------------------------------------------------------------------------
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Registros", f"{len(filtrado):,}".replace(",", "."))
-c2.metric("Años seleccionados", len(anios))
+c2.metric("Años seleccionados", len(anios_efectivos))
 c3.metric("Tipos de proyecto", filtrado["Tipo de Proyecto"].nunique())
 area = filtrado["Área Total"].sum()
 c4.metric("Área total (m²)", f"{area:,.0f}".replace(",", "."))
@@ -227,7 +236,7 @@ with tab_comp:
     fig2.update_layout(legend_title_text="", height=420)
     st.plotly_chart(fig2, width="stretch")
 
-    if len(anios) > 0 and str(max(anios)) == str(max(anios_disponibles)):
+    if str(max(anios_efectivos)) == str(max(anios_disponibles)):
         st.caption(
             f"Nota: {max(anios_disponibles)} puede estar incompleto si el año aún no termina."
         )
