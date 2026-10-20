@@ -78,7 +78,7 @@ def obtener_datos() -> pd.DataFrame | None:
 
 df = obtener_datos()
 
-st.title("Consolidado Trámites - Curadora Arq. Gloria Palacino")
+st.title("Consolidado Trámites <br>Arq. Gloria Palacino")
 
 if df is None:
     st.info("No se encontró el Excel consolidado en la carpeta `data/`.")
