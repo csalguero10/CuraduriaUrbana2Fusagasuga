@@ -68,20 +68,8 @@ def datos_desde_archivo(ruta: str, modificado: float) -> pd.DataFrame:
     return cargar_excel(ruta)
 
 
-@st.cache_data(show_spinner="Cargando Excel…")
-def datos_desde_bytes(contenido: bytes) -> pd.DataFrame:
-    return cargar_excel(contenido)
-
-
 def obtener_datos() -> pd.DataFrame | None:
     excels = sorted(DATA_DIR.glob("*.xlsx"))
-    subido = st.sidebar.file_uploader(
-        "Reemplazar con otro Excel (opcional)",
-        type=["xlsx"],
-        help="Debe tener una hoja por año (2021, 2022…) con las mismas columnas.",
-    )
-    if subido is not None:
-        return datos_desde_bytes(subido.getvalue())
     if excels:
         ruta = excels[0]
         return datos_desde_archivo(str(ruta), ruta.stat().st_mtime)
@@ -90,10 +78,10 @@ def obtener_datos() -> pd.DataFrame | None:
 
 df = obtener_datos()
 
-st.title("🏗️ Consolidado de trámites — Curaduría")
+st.title("Consolidado Trámites - Curadora Arq. Gloria Palacino")
 
 if df is None:
-    st.info("Sube el Excel consolidado desde la barra lateral para comenzar.")
+    st.info("No se encontró el Excel consolidado en la carpeta `data/`.")
     st.stop()
 
 
@@ -153,12 +141,10 @@ if filtrado.empty:
 # ---------------------------------------------------------------------------
 # 4. Indicadores
 # ---------------------------------------------------------------------------
-c1, c2, c3, c4 = st.columns(4)
+c1, c2, c3 = st.columns(3)
 c1.metric("Registros", f"{len(filtrado):,}".replace(",", "."))
 c2.metric("Años seleccionados", len(anios_efectivos))
 c3.metric("Tipos de proyecto", filtrado["Tipo de Proyecto"].nunique())
-area = filtrado["Área Total"].sum()
-c4.metric("Área total (m²)", f"{area:,.0f}".replace(",", "."))
 
 
 # ---------------------------------------------------------------------------
